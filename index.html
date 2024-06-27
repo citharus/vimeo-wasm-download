@@ -2,9 +2,9 @@
 <head>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/assets/ffmpeg/package/dist/umd/ffmpeg.js"></script>
-    <script src="/assets/util/package/dist/umd/index.js"></script>
-    <script src="/assets/core/package/dist/umd/ffmpeg-core.js"></script>
+    <script src="./assets/ffmpeg/package/dist/umd/ffmpeg.js"></script>
+    <script src="./assets/util/package/dist/umd/index.js"></script>
+    <script src="./assets/core/package/dist/umd/ffmpeg-core.js"></script>
 
     <style>
         .step {
@@ -121,7 +121,7 @@
     </div>
 </main>
 <div id="errors" class="absolute top-0 right-0 h-screen col-start-3 col-end-3"></div>
-<script src="assets/wasm_exec.js"></script>
+<script src="./assets/wasm_exec.js"></script>
 <script>
     const go = new Go()
     WebAssembly.instantiateStreaming(fetch("assets/wasm.wasm"), go.importObject).then(result => {
