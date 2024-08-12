@@ -46,11 +46,7 @@ func displayTempError(msg string) {
 		div.Set("innerText", msg)
 		defer div.Call("remove")
 		js.Global().Get("document").Call("getElementById", "errors").Call("prepend", div)
-		div.Call("append", p)
-
-		time.Sleep(5 * time.Second)
-
-		div.Call("remove")
+		time.Sleep(2 * time.Second)
 	}()
 }
 
