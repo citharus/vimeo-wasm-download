@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="./assets/ffmpeg/package/dist/umd/ffmpeg.js"></script>
+    <script src="./assets/util/package/dist/umd/index.js"></script>
+    <script src="./assets/core/package/dist/umd/ffmpeg-core.js"></script>
+    <style>
+        :root {
+            --z-50: #fafafa;
+            --z-100: #f4f4f5;
+            --z-200: #e4e4e7;
+            --z-300: #d4d4d8;
+            --z-400: #a1a1aa;
+            --z-500: #71717a;
+            --z-600: #52525b;
+            --z-700: #3f3f46;
+            --z-800: #27272a;
+            --z-900: #18181b;
+            --z-950: #09090b;
+            --v-50: #f5f3ff;
+            --v-100: #ede9fe;
+            --v-200: #ddd6fe;
+            --v-300: #c4b5fd;
+            --v-400: #a78bfa;
+            --v-500: #8b5cf6;
+            --v-600: #7c3aed;
+            --v-700: #6d28d9;
+            --v-800: #5b21b6;
+            --v-900: #4c1d95;
+            --v-950: #2e1065;
+        }
+
+        *, ::after, ::before {
+            box-sizing: border-box;
+            border-style: solid;
+            border-width: 0;
+        }
+
+        :host, html {
+            -webkit-text-size-adjust: 100%;
+            -moz-tab-size: 4;
+            tab-size: 4;
+            font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-feature-settings: normal;
+            font-variation-settings: normal;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            line-height: inherit;
+            color: var(--z-800);
+            text-align: center;
+            background-color: var(--z-100);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 700;
+            color: var(--v-500);
+        }
+
+        h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--z-800);
+        }
+
+        main {
+            max-width: 45rem;
+            margin: 0 auto;
+        }
+
+        main > div {
+            margin: 1.5rem 0;
+            padding: 0.5rem 0;
+            background-color: var(--z-200);
+            text-align: center;
+            border-radius: 0.5rem;
+            transition: opacity 2s;
+        }
+
+        input[type=url] {
+            width: 50%;
+            padding: 0.05rem 0.5rem;
+            margin: 0.5rem;
+            border-radius: 0.5rem;
+            border-color: var(--z-400);
+            border-width: 2px;
+            outline: none;
+            caret-color: var(--z-500);
+            caret-shape: block;
+            background-color: var(--z-300);
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 600;
+        }
+
+        input[type=url]:focus {
+            border-color: var(--v-500);
+            caret-color: var(--v-500);
+        }
+
+        input[type=url]:disabled {
+            border-color: #22c55e;
+        }
+
+        input[type=radio] {
+            width: 1rem;
+            height: 1rem;
+            outline: none;
+            accent-color: var(--v-500);
+        }
+
+        #errors {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: -999;
+        }
+
+        #errors > div {
+            width: 15rem;
+            padding: 0.25rem 2rem;
+            margin: 0.25rem auto;
+            background-color: #ef4444;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            line-height: 1.25rem;
+        }
+
+        .btn {
+            padding: 0 0.5rem;
+            margin: 0.5rem;
+            border-radius: 0.25rem;
+            border-bottom-width: 4px;
+            border-color: var(--z-400);
+            background-color: var(--z-300);
+            font-size: 0.875rem;
+            font-weight: 600;
+            line-height: 1.25rem;
+            transition: background-color 0.5s;
+            color: var(--z-700);
+        }
+
+        .btn:active:enabled {
+            margin-bottom: calc(0.5rem + 2px);
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        .btn:hover:enabled {
+            border-color: var(--v-500);
+            background-color: var(--v-400);
+        }
+
+        .btn:disabled {
+            background-color: #4ade80;
+            border-color: #22c55e;
+            border-bottom-width: 2px;
+            transform: translateY(2px);
+        }
+
+        .progress {
+            width: 50%;
+            margin: 0.5rem auto;
+            overflow: hidden;
+            display: none;
+            border-width: 0;
+            border-radius: 0.5rem;
+            background-color: var(--z-300);
+        }
+
+        .progress > div {
+            height: 1.25rem;
+            background-color: var(--v-500);
+        }
+
+        .hidden {
+            opacity: 0;
+        }
+
+        .hidden > button {
+            display: none;
+        }
+
+        .spinner {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin: 0 auto;
+            border: 5px solid var(--z-400);
+            border-top: 5px solid var(--v-500);
+
+            border-radius: 50%;
+            animation: spin 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>local vimeo downloader</h1>
+    <div id="url">
+        <h4>input playlist.json url</h4>
+        <form>
+            <input type="url" placeholder="https://52vod-adaptive.akamaized.net/exp=123...">
+        </form>
+        <button class="btn">confirm</button>
+    </div>
+    <div id="video" class="hidden">
+        <h4>select video resolution</h4>
+        <form id="video-form">
+        </form>
+        <button class="btn">download video</button>
+        <div class="progress">
+            <div id="video-progress"></div>
+        </div>
+    </div>
+    <div id="audio" class="hidden">
+        <h4>select audio quality</h4>
+        <form id="audio-form">
+        </form>
+        <button class="btn">download audio</button>
+        <div class="progress">
+            <div id="audio-progress"></div>
+        </div>
+    </div>
+    <div id="download" class="hidden">
+        <div class="spinner"></div>
+        <a href="#" style="display: none">
+            <svg id="svg" fill="#27272a" stroke="#000000" width="50" height="50" viewBox="144 144 512 512"
+                 xmlns="http://www.w3.org/2000/svg">
+                <g id="IconSvg_iconCarrier">
+                    <g xmlns="http://www.w3.org/2000/svg">
+                        <path d="m239.29 559.2h103.79c46.855 62.473 136.03 75.066 198.5 28.215 62.473-46.855 75.066-136.03 28.215-198.5-16.625-22.168-39.801-39.297-66-48.367v-32.746c-0.50391-6.0469-2.5195-11.586-6.5508-16.121l-103.79-103.79c-4.5352-4.0312-10.078-6.5508-16.121-6.5508h-138.04c-20.656 0-37.785 17.129-37.785 37.785v302.29c-0.003906 21.164 17.129 37.789 37.785 37.789zm321.43-85.145c0 57.434-46.352 103.79-103.79 103.79-57.434 0-103.79-46.352-103.79-103.79s46.352-103.79 103.79-103.79c56.93 0 103.79 46.855 103.79 103.79zm-188.93-254.93 94.715 94.715h-94.715zm-37.785 0v113.36c0 10.578 8.5664 19.145 19.145 19.145h33.25c-58.945 34.258-85.648 105.8-62.977 169.79h-84.133v-302.29z"></path>
+                        <path d="m437.79 427.2v48.871l-15.113-15.113c-7.5586-7.0547-19.648-6.5508-26.703 1.0078-6.5508 7.0547-6.5508 18.641 0 25.695l47.359 47.359c7.5586 7.5586 19.145 7.5586 26.703 0l47.359-47.359c6.5508-8.0625 5.0391-20.152-3.0234-26.703-7.0547-5.543-16.625-5.543-23.68 0l-15.113 15.617v-49.375c0-10.578-8.5664-19.145-19.145-19.145-10.586 0-18.645 8.5664-18.645 19.145z"></path>
+                    </g>
+                </g>
+            </svg>
+        </a>
+    </div>
+</main>
+<div id="errors"></div>
+<script src="./assets/wasm_exec.js"></script>
+<script>
+    const go = new Go()
+    WebAssembly.instantiateStreaming(fetch("assets/wasm.wasm"), go.importObject).then(result => {
+        go.run(result.instance)
+    })
+</script>
+<script>
+    const {FFmpeg} = FFmpegWASM;
+
+    let ffmpeg = new FFmpeg();
+    ffmpeg.on("log", ({message}) => {
+        console.log(message)
+    })
+
+    async function toBlobURL(url, mimeType) {
+        const buf = await (await fetch(url,)).arrayBuffer();
+        const blob = new Blob([buf], {type: mimeType});
+        return URL.createObjectURL(blob);
+    }
+
+    async function combine() {
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
+        await ffmpeg.load({
+            coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+            wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "applicaiton/wasm"),
+        });
+
+        await ffmpeg.writeFile("video", window.videoDst)
+        await ffmpeg.writeFile("audio", window.audioDst)
+        await ffmpeg.exec(["-i", "video", "-i", "audio", "-c:v", "copy", "-c:a", "aac", "output.mp4"])
+
+        const data = await ffmpeg.readFile("output.mp4")
+        let a = document.getElementsByTagName("a")[0]
+        a.href = URL.createObjectURL(new Blob([data.buffer], {type: "video/mp4"}))
+        a.download = "output.mp4"
+
+        a.style.display = "inline-block"
+        document.getElementsByClassName("spinner")[0].style.display = "none"
+    }
+</script>
+</body>
+</html>
