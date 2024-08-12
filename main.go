@@ -53,6 +53,21 @@ func displayTempError(msg string) {
 var buttons = js.Global().Get("document").Call("getElementsByTagName", "button")
 var data = new(Data)
 
+func createInputAndAppend(form js.Value, label, id string) {
+	i := js.Global().Get("document").Call("createElement", "input")
+	i.Set("value", id)
+	i.Set("id", id)
+	i.Set("type", "radio")
+	i.Set("name", "radio")
+
+	l := js.Global().Get("document").Call("createElement", "label")
+	l.Set("htmlFor", id)
+	l.Set("innerText", label)
+
+	form.Call("appendChild", i)
+	form.Call("appendChild", l)
+}
+
 func main() {
 	firstStepEvent := js.FuncOf(func(this js.Value, args []js.Value) any {
 		go func() error {
