@@ -14,10 +14,10 @@ import (
 )
 
 type Data struct {
-	Url        *url.URL
-	MasterJson *MasterJson
-	VideoId    string
-	AudioId    string
+	Url      *url.URL
+	Playlist *Playlist
+	VideoId  string
+	AudioId  string
 }
 
 func toHumanReadableSize(size float64) string {
@@ -77,32 +77,32 @@ func main() {
 			}
 			data.Url = u
 
-			masterJson, err := GetMasterJson(u.String())
+			playlist, err := GetPlaylist(u.String())
 			if err != nil {
 				displayTempError("Failed to download playlist.json")
 				return err
 			}
-			data.MasterJson = masterJson
+			data.Playlist = playlist
 
-			baseUrl, _ := url.Parse(data.MasterJson.BaseUrl)
+			baseUrl, _ := url.Parse(data.Playlist.BaseUrl)
 			data.Url = data.Url.ResolveReference(baseUrl)
 
 			args[0].Get("target").Set("disabled", "disabled")
 			playlistUrlInput.Set("disabled", "disabled")
 
-			sort.Slice(masterJson.Videos, func(i, j int) bool {
-				return masterJson.Videos[i].Height < masterJson.Videos[j].Height
+			sort.Slice(playlist.Videos, func(i, j int) bool {
+				return playlist.Videos[i].Height < playlist.Videos[j].Height
 			})
 
-			sort.Slice(masterJson.Audios, func(i, j int) bool {
-				sizeI, _ := masterJson.Audios[i].GetSize()
-				sizeJ, _ := masterJson.Audios[j].GetSize()
+			sort.Slice(playlist.Audios, func(i, j int) bool {
+				sizeI, _ := playlist.Audios[i].GetSize()
+				sizeJ, _ := playlist.Audios[j].GetSize()
 				return sizeI < sizeJ
 			})
 
 			videoForm := js.Global().Get("document").Call("getElementById", "video-form")
 
-			for _, video := range masterJson.Videos {
+			for _, video := range playlist.Videos {
 				//size, err := video.GetSize()
 				if err != nil {
 					displayTempError(err.Error())
@@ -114,7 +114,7 @@ func main() {
 
 			audioForm := js.Global().Get("document").Call("getElementById", "audio-form")
 
-			for _, audio := range masterJson.Audios {
+			for _, audio := range playlist.Audios {
 				size, err := audio.GetSize()
 				if err != nil {
 					displayTempError(err.Error())
@@ -180,7 +180,7 @@ func main() {
 				go func() {
 					wg.Add(1)
 					defer close(pChan)
-					err := DownloadVideo(data.VideoId, &videoBuffer, data.MasterJson, data.Url, pChan)
+					err := DownloadVideo(data.VideoId, &videoBuffer, data.Playlist, data.Url, pChan)
 					if err != nil {
 						displayTempError(err.Error())
 						return
@@ -246,7 +246,7 @@ func main() {
 				go func() {
 					wg.Add(1)
 					defer close(pCHan)
-					err := DownloadAudio(data.AudioId, &audioBuffer, data.MasterJson, data.Url, pCHan)
+					err := DownloadAudio(data.AudioId, &audioBuffer, data.Playlist, data.Url, pCHan)
 					if err != nil {
 						displayTempError(err.Error())
 						return

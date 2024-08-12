@@ -10,9 +10,9 @@ import (
 	"syscall/js"
 )
 
-func DownloadVideo(videoId string, videoBuffer *bytes.Buffer, masterJson *MasterJson, baseUrl *url.URL, progressChan chan int) error {
+func DownloadVideo(videoId string, videoBuffer *bytes.Buffer, playlist *Playlist, baseUrl *url.URL, progressChan chan int) error {
 	var video Video
-	for _, v := range masterJson.Videos {
+	for _, v := range playlist.Videos {
 		if v.Id == videoId {
 			video = v
 			break
@@ -47,9 +47,9 @@ func DownloadVideo(videoId string, videoBuffer *bytes.Buffer, masterJson *Master
 	return nil
 }
 
-func DownloadAudio(audioId string, audioBuffer *bytes.Buffer, masterJson *MasterJson, baseUrl *url.URL, progressChan chan int) error {
+func DownloadAudio(audioId string, audioBuffer *bytes.Buffer, playlist *Playlist, baseUrl *url.URL, progressChan chan int) error {
 	var audio Audio
-	for _, a := range masterJson.Audios {
+	for _, a := range playlist.Audios {
 		if a.Id == audioId {
 			audio = a
 			break

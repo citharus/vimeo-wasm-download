@@ -3,26 +3,19 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
 
 type Segment struct {
-	Start float64 `json:"start"`
-	End   float64 `json:"end"`
-	Url   string  `json:"url"`
-	Size  int     `json:"size"`
+	Url  string `json:"url"`
+	Size int    `json:"size"`
 }
 
 type Video struct {
 	Id              string    `json:"id"`
 	BaseUrl         string    `json:"base_url"`
 	Codecs          string    `json:"codecs"`
-	Bitrate         int       `json:"bitrate"`
-	AvgBitrate      int       `json:"avg_bitrate"`
-	Duration        float64   `json:"duration"`
-	Framerate       int       `json:"framerate"`
 	Height          int       `json:"height"`
 	IndexSegmentURL string    `json:"index_segment"`
 	InitSegment     string    `json:"init_segment"`
@@ -46,9 +39,6 @@ type Audio struct {
 	Id              string    `json:"id"`
 	BaseUrl         string    `json:"base_url"`
 	Codecs          string    `json:"codecs"`
-	Bitrate         int       `json:"bitrate"`
-	AvgBitrate      int       `json:"avg_bitrate"`
-	Duration        float64   `json:"duration"`
 	IndexSegmentURL string    `json:"index_segment"`
 	InitSegment     string    `json:"init_segment"`
 	Segments        []Segment `json:"segments"`
@@ -67,14 +57,14 @@ func (audio *Audio) GetSize() (int, error) {
 	return size, nil
 }
 
-type MasterJson struct {
+type Playlist struct {
 	ClipId  string  `json:"clip_id"`
 	BaseUrl string  `json:"base_url"`
 	Videos  []Video `json:"video"`
 	Audios  []Audio `json:"audio"`
 }
 
-func GetMasterJson(url string) (*MasterJson, error) {
+func GetPlaylist(url string) (*Playlist, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -84,10 +74,9 @@ func GetMasterJson(url string) (*MasterJson, error) {
 	if err != nil {
 		return nil, err
 	}
-	mj := new(MasterJson)
+	mj := new(Playlist)
 	if err = json.Unmarshal(reader, mj); err != nil {
 		return nil, err
 	}
-	fmt.Println("END of getmasterjson")
 	return mj, nil
 }
