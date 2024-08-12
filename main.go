@@ -20,16 +20,6 @@ type Data struct {
 	AudioId    string
 }
 
-func goToNextStep(currentButton js.Value) {
-	currentButton.
-		Get("parentElement").
-		Get("nextElementSibling").
-		Get("classList").
-		Call("remove", "invisible")
-	currentButton.Set("disabled", "disabled")
-	currentButton.Get("parentElement").Set("disabled", "disabled")
-}
-
 func toHumanReadableSize(size float64) string {
 	sizes := []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
 	i := 0
@@ -69,19 +59,18 @@ func createInputAndAppend(form js.Value, label, id string) {
 }
 
 func main() {
-	firstStepEvent := js.FuncOf(func(this js.Value, args []js.Value) any {
+	processPlaylistUrl := js.FuncOf(func(this js.Value, args []js.Value) any {
 		go func() error {
-			i := args[0].
+			playlistUrlInput := args[0].
 				Get("target").
 				Get("parentElement").
 				Call("querySelector", "input[type='url']")
-
-			if i.Get("value").String() == "" {
-				displayTempError("No URL was given")
+			if playlistUrlInput.Get("value").String() == "" {
+				displayTempError("No URL")
 				return nil
 			}
 
-			u, err := url.Parse(i.Get("value").String())
+			u, err := url.Parse(playlistUrlInput.Get("value").String())
 			if err != nil {
 				displayTempError("Not a real URL")
 				return err
@@ -90,10 +79,16 @@ func main() {
 
 			masterJson, err := GetMasterJson(u.String())
 			if err != nil {
-				displayTempError("Failed to download master.json")
+				displayTempError("Failed to download playlist.json")
 				return err
 			}
 			data.MasterJson = masterJson
+
+			baseUrl, _ := url.Parse(data.MasterJson.BaseUrl)
+			data.Url = data.Url.ResolveReference(baseUrl)
+
+			args[0].Get("target").Set("disabled", "disabled")
+			playlistUrlInput.Set("disabled", "disabled")
 
 			sort.Slice(masterJson.Videos, func(i, j int) bool {
 				return masterJson.Videos[i].Height < masterJson.Videos[j].Height
@@ -105,119 +100,190 @@ func main() {
 				return sizeI < sizeJ
 			})
 
-			n := args[0].Get("target").Get("parentElement").Get("nextElementSibling")
+			videoForm := js.Global().Get("document").Call("getElementById", "video-form")
 
-			form := js.Global().Get("document").Call("createElement", "form")
-			bb := n.Call("getElementsByTagName", "button").Index(0)
-			n.Call("insertBefore", form, bb)
-			for i, video := range masterJson.Videos {
-				size, err := video.GetSize()
+			for _, video := range masterJson.Videos {
+				//size, err := video.GetSize()
 				if err != nil {
 					displayTempError(err.Error())
 					return err
 				}
 
-				label := js.Global().Get("document").Call("createElement", "label")
-				label.Set("htmlFor", video.Id)
-				label.Set("innerText", fmt.Sprintf("Video %d: %dp (%s)", i, video.Height, toHumanReadableSize(float64(size))))
-				form.Call("appendChild", label)
-
-				input := js.Global().Get("document").Call("createElement", "input")
-				input.Set("value", video.Id)
-				input.Set("id", video.Id)
-				input.Set("type", "radio")
-				input.Set("name", "radio")
-				label.Call("prepend", input)
+				createInputAndAppend(videoForm, fmt.Sprintf("%dp", video.Height), video.Id)
 			}
 
-			form = js.Global().Get("document").Call("createElement", "form")
-			bb = n.Get("nextElementSibling").Call("getElementsByTagName", "button").Index(0)
-			n.Get("nextElementSibling").Call("insertBefore", form, bb)
-			for i, audio := range masterJson.Audios {
+			audioForm := js.Global().Get("document").Call("getElementById", "audio-form")
+
+			for _, audio := range masterJson.Audios {
 				size, err := audio.GetSize()
 				if err != nil {
 					displayTempError(err.Error())
 					return err
 				}
 
-				label := js.Global().Get("document").Call("createElement", "label")
-				label.Set("htmlFor", audio.Id)
-				label.Set("innerText", fmt.Sprintf("Audio %d: %s", i, toHumanReadableSize(float64(size))))
-				form.Call("appendChild", label)
-
-				input := js.Global().Get("document").Call("createElement", "input")
-				input.Set("value", audio.Id)
-				input.Set("id", audio.Id)
-				input.Set("type", "radio")
-				input.Set("name", "radio")
-				label.Call("prepend", input)
+				createInputAndAppend(audioForm, fmt.Sprintf("%s", toHumanReadableSize(float64(size))), audio.Id)
 			}
 
-			goToNextStep(args[0].Get("target"))
-			i.Set("disabled", "disabled")
+			js.Global().Get("document").
+				Call("getElementById", "video").
+				Get("classList").
+				Call("remove", "hidden")
 			return nil
 		}()
 		return nil
 	})
 
-	secondStepEvent := js.FuncOf(func(this js.Value, args []js.Value) any {
-		selectedVideo := args[0].
-			Get("target").
-			Get("parentElement").
-			Call("querySelector", "input[type='radio']:checked")
+	downloadVideo := js.FuncOf(func(this js.Value, args []js.Value) any {
+		go func() error {
+			selectedResolution := args[0].
+				Get("target").
+				Get("parentElement").
+				Call("querySelector", "input[type='radio']:checked")
 
-		if selectedVideo.IsNull() {
-			displayTempError("No video was selected")
-			return nil
-		}
+			if selectedResolution.IsNull() {
+				displayTempError("No video was selected")
+				return nil
+			}
 
-		data.VideoId = selectedVideo.Get("value").String()
+			data.VideoId = selectedResolution.Get("value").String()
 
-		goToNextStep(args[0].Get("target"))
-		return nil
-	})
+			js.Global().Get("document").
+				Call("getElementById", "audio").
+				Get("classList").
+				Call("remove", "hidden")
 
-	thirdStepEvent := js.FuncOf(func(this js.Value, args []js.Value) any {
-		selectedAudio := args[0].
-			Get("target").
-			Get("parentElement").
-			Call("querySelector", "input[type='radio']:checked")
+			js.Global().
+				Get("document").
+				Call("getElementById", "video-progress").
+				Get("parentElement").
+				Get("style").
+				Set("display", "block")
 
-		if selectedAudio.IsNull() {
-			displayTempError("No audio was selected")
-			return nil
-		}
+			js.Global().
+				Get("document").
+				Call("getElementById", "video-form").
+				Get("style").
+				Set("display", "none")
 
-		data.AudioId = selectedAudio.Get("value").String()
+			args[0].Get("target").Get("style").Set("display", "none")
 
-		go func() {
-			baseUrl, _ := url.Parse(data.MasterJson.BaseUrl)
-			data.Url = data.Url.ResolveReference(baseUrl)
+			js.Global().
+				Get("document").
+				Call("getElementsByTagName", "h4").
+				Index(1).
+				Set("innerHTML", "downloading video")
 
-			var wg sync.WaitGroup
-			wg.Add(2)
-
-			var audioBuffer, videoBuffer bytes.Buffer
 			go func() {
-				DownloadVideo(data.VideoId, &videoBuffer, data.MasterJson, data.Url)
-				wg.Done()
-			}()
-			go func() {
-				DownloadAudio(data.AudioId, &audioBuffer, data.MasterJson, data.Url)
-				wg.Done()
-			}()
+				var wg sync.WaitGroup
+				var videoBuffer bytes.Buffer
+				var pChan = make(chan int)
+				go func() {
+					wg.Add(1)
+					defer close(pChan)
+					err := DownloadVideo(data.VideoId, &videoBuffer, data.MasterJson, data.Url, pChan)
+					if err != nil {
+						displayTempError(err.Error())
+						return
+					}
+					wg.Done()
+				}()
 
-			wg.Wait()
-			js.Global().Call("combine")
+				vp := js.Global().Get("document").Call("getElementById", "video-progress")
+				for p := range pChan {
+					vp.Get("style").Set("width", fmt.Sprintf("%d%%", p))
+				}
+				wg.Wait()
+
+				vp.Get("style").Set("background-color", "#4ade80")
+				js.Global().
+					Get("document").
+					Call("getElementsByTagName", "h4").
+					Index(1).
+					Set("innerHTML", "finished downloading video")
+			}()
+			return nil
 		}()
-
-		goToNextStep(args[0].Get("target"))
 		return nil
 	})
 
-	buttons.Index(0).Call("addEventListener", "click", firstStepEvent)
-	buttons.Index(1).Call("addEventListener", "click", secondStepEvent)
-	buttons.Index(2).Call("addEventListener", "click", thirdStepEvent)
+	downloadAudio := js.FuncOf(func(this js.Value, args []js.Value) any {
+		go func() error {
+			selectedQuality := args[0].
+				Get("target").
+				Get("parentElement").
+				Call("querySelector", "input[type='radio']:checked")
+
+			if selectedQuality.IsNull() {
+				displayTempError("No audio was selected")
+				return nil
+			}
+
+			data.AudioId = selectedQuality.Get("value").String()
+
+			js.Global().
+				Get("document").
+				Call("getElementById", "audio-progress").
+				Get("parentElement").
+				Get("style").
+				Set("display", "block")
+			js.Global().
+				Get("document").
+				Call("getElementById", "audio-form").
+				Get("style").
+				Set("display", "none")
+			args[0].Get("target").Get("style").Set("display", "none")
+
+			js.Global().
+				Get("document").
+				Call("getElementsByTagName", "h4").
+				Index(2).
+				Set("innerHTML", "downloading audio")
+
+			go func() {
+				var wg sync.WaitGroup
+				var audioBuffer bytes.Buffer
+				var pCHan = make(chan int)
+				go func() {
+					wg.Add(1)
+					defer close(pCHan)
+					err := DownloadAudio(data.AudioId, &audioBuffer, data.MasterJson, data.Url, pCHan)
+					if err != nil {
+						displayTempError(err.Error())
+						return
+					}
+					wg.Done()
+				}()
+
+				vp := js.Global().Get("document").Call("getElementById", "audio-progress")
+				for p := range pCHan {
+					vp.Get("style").Set("width", fmt.Sprintf("%d%%", p))
+				}
+				wg.Wait()
+
+				vp.Get("style").Set("background-color", "#4ade80")
+				js.Global().
+					Get("document").
+					Call("getElementsByTagName", "h4").
+					Index(2).
+					Set("innerHTML", "finished downloading audio")
+
+				js.Global().Call("combine")
+
+				js.Global().Get("document").
+					Call("getElementById", "download").
+					Get("classList").
+					Call("remove", "hidden")
+
+				js.Global().Call("combine")
+			}()
+			return nil
+		}()
+		return nil
+	})
+
+	buttons.Index(0).Call("addEventListener", "click", processPlaylistUrl)
+	buttons.Index(1).Call("addEventListener", "click", downloadVideo)
+	buttons.Index(2).Call("addEventListener", "click", downloadAudio)
 
 	select {}
 }
