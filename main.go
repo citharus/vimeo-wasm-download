@@ -43,9 +43,8 @@ func toHumanReadableSize(size float64) string {
 func displayTempError(msg string) {
 	go func() {
 		div := js.Global().Get("document").Call("createElement", "div")
-		p := js.Global().Get("document").Call("createElement", "p")
-		p.Set("innerText", msg)
-
+		div.Set("innerText", msg)
+		defer div.Call("remove")
 		js.Global().Get("document").Call("getElementById", "errors").Call("prepend", div)
 		div.Call("append", p)
 
