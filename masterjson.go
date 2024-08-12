@@ -16,16 +16,17 @@ type Segment struct {
 }
 
 type Video struct {
-	Id          string    `json:"id"`
-	BaseUrl     string    `json:"base_url"`
-	Codecs      string    `json:"codecs"`
-	Bitrate     int       `json:"bitrate"`
-	AvgBitrate  int       `json:"avg_bitrate"`
-	Duration    float64   `json:"duration"`
-	Framerate   int       `json:"framerate"`
-	Height      int       `json:"height"`
-	InitSegment string    `json:"init_segment"`
-	Segments    []Segment `json:"segments"`
+	Id              string    `json:"id"`
+	BaseUrl         string    `json:"base_url"`
+	Codecs          string    `json:"codecs"`
+	Bitrate         int       `json:"bitrate"`
+	AvgBitrate      int       `json:"avg_bitrate"`
+	Duration        float64   `json:"duration"`
+	Framerate       int       `json:"framerate"`
+	Height          int       `json:"height"`
+	IndexSegmentURL string    `json:"index_segment"`
+	InitSegment     string    `json:"init_segment"`
+	Segments        []Segment `json:"segments"`
 }
 
 func (video *Video) GetSize() (int, error) {
@@ -42,14 +43,15 @@ func (video *Video) GetSize() (int, error) {
 }
 
 type Audio struct {
-	Id          string    `json:"id"`
-	BaseUrl     string    `json:"base_url"`
-	Codecs      string    `json:"codecs"`
-	Bitrate     int       `json:"bitrate"`
-	AvgBitrate  int       `json:"avg_bitrate"`
-	Duration    float64   `json:"duration"`
-	InitSegment string    `json:"init_segment"`
-	Segments    []Segment `json:"segments"`
+	Id              string    `json:"id"`
+	BaseUrl         string    `json:"base_url"`
+	Codecs          string    `json:"codecs"`
+	Bitrate         int       `json:"bitrate"`
+	AvgBitrate      int       `json:"avg_bitrate"`
+	Duration        float64   `json:"duration"`
+	IndexSegmentURL string    `json:"index_segment"`
+	InitSegment     string    `json:"init_segment"`
+	Segments        []Segment `json:"segments"`
 }
 
 func (audio *Audio) GetSize() (int, error) {
